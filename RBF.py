@@ -39,24 +39,18 @@ class RBF:
         """
 
         # drop useless information from raw data
-        offline_df = offline_df[list(input_labels) + list(output_labels)]
+        self.offline_df = pd.DataFrame(offline_df[list(input_labels) + list(output_labels)])
 
-        # process missing val marker
-        # replace missing data with NaN
-        if missing_val_marker and missing_val_marker is not float('NaN'):
-            for col_name in input_labels:
-                offline_df = offline_df.replace({col_name: {missing_val_marker: float('NaN')}})
+        # init variables like offline rank vectors
+        self.input_labels = input_labels
+        self.output_labels = output_labels
+
+        # create df with sorted rows
 
         # convert raw data into sorted MAC addresses or unique names
         # create an identical ranked table with location and rank matrix
-        self.ranked_in_df = offline_df[input_labels].rank(axis=1, method='dense').join(offline_df[output_labels])
+        # self.ranked_in_df = offline_df[input_labels].rank(axis=1, method='dense').join(offline_df[output_labels])
 
-        # init variables like offline rank vectors
-        self.in_df = offline_df
-
-        self.in_labels = input_labels
-
-        self.out_labels = output_labels
 
     def build_rank_vectors_online(self, online_data):
         """
@@ -68,7 +62,7 @@ class RBF:
         """
 
         # TODO: only process common points or ref points
-
+        #
         # TODO: create rank vectors for offline phase
         pass
 

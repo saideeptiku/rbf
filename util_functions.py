@@ -1,4 +1,9 @@
 import pandas as pd
+from tabulate import tabulate
+
+
+def print_df(df):
+    print(tabulate(df, headers='keys', tablefmt='psql'))
 
 
 def remove_columns(df, col_list):

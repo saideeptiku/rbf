@@ -169,6 +169,7 @@ def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col):
     return df
 
 
+# public
 def label_similar_locations(train_df, test_df,
                             x_col='x', y_col='y',
                             label_block_size=5,
