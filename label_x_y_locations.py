@@ -177,11 +177,13 @@ def label_similar_locations(train_df, test_df,
     """
     label each x-y location as a position from 1 to N.
     This will convert data collected at each point into \
-    data collected from a region or sample space.
-    
-    you will get only samples spaces that are an intersection of training and testing
+    data collected from a region or sample space.    
+    You will get only samples spaces that are an intersection of training and testing
     
     :param label_block_size: minimum distance between two sample spaces
+                             The distance is not in meters.
+                             Try and calculate the average distance acrros points in DB.
+
     :param train_df: Data frame that will be used for training
     :param test_df: Data frame that will be used for testing
     :param x_col: column name of x position in data frame
