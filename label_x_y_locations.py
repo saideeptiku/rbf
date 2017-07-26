@@ -191,6 +191,9 @@ def label_similar_locations(train_df, test_df,
     :param new_pos_col: column name for the new position label column
     :return: 
     """
+    print("*"*100)
+    print("*", " "*31, "label similar locations: report ", " "*31, "*")
+    print("*" * 100)
 
     # read data training
     train_df.name = "Training"
@@ -217,6 +220,8 @@ def label_similar_locations(train_df, test_df,
     # keep rows that have position label in common_label
     train_df_lbld = train_df_lbld[train_df_lbld[new_pos_col].isin(common_labels)]
     test_df_lbld = test_df_lbld[test_df_lbld[new_pos_col].isin(common_labels)]
+
+    print("*" * 100)
 
     return train_df_lbld, test_df_lbld
 

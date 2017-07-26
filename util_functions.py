@@ -32,7 +32,7 @@ def get_intersection_on(df_x, df_y, on_col_labels_list):
     """
     take intersection of two
     with labels in list
-    most use full in getting common data points from two dataframes
+    most use full in getting common data points from two data frames
     used for getting wifi data for common points
     """
 
