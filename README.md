@@ -1,6 +1,6 @@
 An implementation of
 
-###"Rank Based Fingerprinting Algorithm for Indoor Positioning"
+### "Rank Based Fingerprinting Algorithm for Indoor Positioning"
 
 
 
