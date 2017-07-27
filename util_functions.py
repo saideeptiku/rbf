@@ -38,3 +38,11 @@ def get_intersection_on(df_x, df_y, on_col_labels_list):
 
     return pd.merge(df_x, df_y, how='inner', on=on_col_labels_list)
 
+
+def spearman_footrule_distance(coordinate_a, coordinate_b):
+    dist = 0
+
+    for i in range(len(coordinate_a)):
+        dist = dist + abs(coordinate_b[i] - coordinate_a[i])
+
+    return dist

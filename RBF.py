@@ -6,7 +6,7 @@ import pandas as pd
 from util_functions import print_df
 import scipy.spatial.distance as scidist
 import operator
-from util_functions import select_data_filter
+from util_functions import select_data_filter, spearman_footrule_distance
 
 
 class RBF:
@@ -41,6 +41,8 @@ class RBF:
 
         self.pos_lbl: output labels
         """
+        # offline db
+        self.offline_df = offline_df
 
         # init variables like offline rank vectors
         self.input_labels = input_labels
@@ -97,16 +99,16 @@ class RBF:
         weight_dict = RBF.__get_weight_dict_from(distance_dict)
 
         # calculate position using weighted average
-        projected_position = self.__get_weighted_average_position__(weight_dict)
+        pos_x, pos_y = self.__get_weighted_average_position__(weight_dict)
 
-        return projected_position
+        return pos_x, pos_y
 
     def __get_weighted_average_position__(self, weight_dict):
         # make list of tuple such that
         # (x, y, weight)
         weight_tuple = []
         for pos in weight_dict.keys():
-            x, y = self.get_xy_from_position_label(pos, self.offline_sorted)
+            x, y = self.get_xy_from_position_label(pos, self.offline_df)
             weight = weight_dict[pos]
             weight_tuple.append((x, y, weight))
 
@@ -173,9 +175,8 @@ class RBF:
             return scidist.sqeuclidean(coordinate_a, coordinate_b)
 
         elif distance_function is distance_options[1]:
-            print("this distance option not available yet! \n", distance_options[1])
-            # TODO:
-            exit()
+            # spearman foot rule is element-wise displacement between two ranked vectors
+            return spearman_footrule_distance(coordinate_a, coordinate_b)
 
         elif distance_function is distance_options[2]:
             print("this distance option not available yet! \n", distance_options[2])
