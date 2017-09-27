@@ -7,6 +7,7 @@ from util_functions import print_df
 import scipy.spatial.distance as scidist
 import operator
 from util_functions import select_data_filter, spearman_footrule_distance
+import numpy as np
 
 
 class RBF:
@@ -135,7 +136,12 @@ class RBF:
         """
         weights = {}
         for pos in distance_dict.keys():
-            weights[pos] = (1 / float(distance_dict[pos]))
+            try:
+                weights[pos] = (1 / float(distance_dict[pos]))
+            except ZeroDivisionError:
+                print("\nwarning: there is zero distance between two vectors.\n",
+                      "           are you using the same data for train and test?")
+                weights[pos] = (1 / float(0.000000000000001))
 
         return weights
 
@@ -329,7 +335,17 @@ class RBF:
         # keep only useful rows
         # this is required if data is not a sorted df
         if is_raw_df:
-            df = df[list(input_labels) + [pos_lbl]]
+            try:
+                df = df[list(input_labels) + [pos_lbl]]
+            except KeyError:
+                # columns in Train not in test. add nan columns to test
+                miss_cols = set(input_labels) - set(df.columns)
+
+                for col in miss_cols:
+                    df[col] = np.nan
+
+                # columns added let's try that again
+                df = df[list(input_labels) + [pos_lbl]]
 
         # get required row as df
         row_index_df = df.ix[[index]]

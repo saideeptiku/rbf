@@ -2,6 +2,7 @@
 import pandas as pd
 import math
 import numpy as np
+from util_functions import print_df
 
 
 class LabelManager:
@@ -156,7 +157,7 @@ def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col):
         label = label_manager.get_label(x, y)
 
         if label is None:
-            print("-"*100)
+            print("-" * 100)
             print("There seems to be a data point that was not labeled")
             print(df.name, "df at index:", index)
             print("consider increasing average variation")
@@ -170,16 +171,53 @@ def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col):
 
 
 # public
+def average_duplicate_labels(df, label_col_name):
+    """
+    average out wifi strengths of duplicate labels
+    :param label_col_name:
+    :param df:
+    :return:
+    """
+    # get set of all labels and iter
+    # print(set(df[label_col_name].tolist()))
+    for label in list(set(df[label_col_name].tolist())):
+        #   select rows with same label
+
+        df_sel = df.loc[(df[label_col_name] == label)]
+
+        # print_df(df_sel)
+
+        # avg out values and not label
+        if df_sel.shape[0] > 1:
+            # remove all rows with label
+            df = df.drop(df_sel.index)
+
+            # add row with averaged values
+            # print(max(df.index))
+            df.loc[max(df.index) + 1] = df_sel.mean(axis=0)
+
+    # re-index df
+    df.index = range(0, len(df.index))
+
+    # return df
+    return df
+
+
+# public
 def label_similar_locations(train_df, test_df,
                             x_col='x', y_col='y',
                             label_block_size=5,
-                            new_pos_col="position_label"):
+                            new_pos_col="position_label",
+                            average_duplicate_labels_train=True,
+                            average_duplicate_labels_test=True,):
     """
     label each x-y location as a position from 1 to N.
     This will convert data collected at each point into \
     data collected from a region or sample space.    
     You will get only samples spaces that are an intersection of training and testing
     
+    :param average_duplicate_labels_test:
+    :param average_duplicate_labels_train:
     :param label_block_size: minimum distance between two sample spaces
                              The distance is not in meters.
                              Try and calculate the average distance acrros points in DB.
@@ -191,8 +229,8 @@ def label_similar_locations(train_df, test_df,
     :param new_pos_col: column name for the new position label column
     :return: 
     """
-    print("*"*100)
-    print("*", " "*31, "label similar locations: report ", " "*31, "*")
+    print("*" * 100)
+    print("*", " " * 31, "label similar locations: report ", " " * 31, "*")
     print("*" * 100)
 
     # read data training
@@ -222,6 +260,12 @@ def label_similar_locations(train_df, test_df,
     test_df_lbld = test_df_lbld[test_df_lbld[new_pos_col].isin(common_labels)]
 
     print("*" * 100)
+
+    if average_duplicate_labels_test:
+        test_df_lbld = average_duplicate_labels(test_df_lbld, new_pos_col)
+
+    if average_duplicate_labels_train:
+        train_df_lbld = average_duplicate_labels(train_df_lbld, new_pos_col)
 
     return train_df_lbld, test_df_lbld
 
