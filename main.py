@@ -2,9 +2,9 @@
 import pandas as pd
 from label_x_y_locations import label_similar_locations
 from RBF import RBF
-import \
-    util_functions as util_f
+import util_functions as util_f
 import matplotlib.pyplot as plt
+from CSUDB.data_fetcher import get_paths, get_map, PLACES, DEVICES, RELATIVE_BASE_PATH
 
 # ######### Constants ##########
 
@@ -123,6 +123,10 @@ def main():
 
 
 if __name__ == "__main__":
+
+    print(get_map(PLACES[0]))
+    print(get_paths(PLACES[0], DEVICES[0], 0))
+    exit()
     global K
     # print("RBF ", TRAIN_DEVICE + " + " + TEST_DEVICE)
     # print("{:3} {:5}".format("K", "AVG. ERROR"))
