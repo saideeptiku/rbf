@@ -32,9 +32,9 @@ PATH_NAME = "BC-INFILL"
 def main():
     # read data training
     # training_df = pd.read_csv("data/CSUDB/CSV/oneplus3/bc_infill/bc_infill_run0.csv")
-    training_df = pd.read_csv("data/CSUDB/CSV/oneplus2/bc_infill/bc_infill_run_0.csv")
+    training_df = pd.read_csv("CSUDB/CSV/oneplus2/bc_infill/bc_infill_run0.csv")
     # read validation training
-    validation_df = pd.read_csv("data/CSUDB/CSV/LG/bc_infill/bc_infill_run_1.csv")
+    validation_df = pd.read_csv("CSUDB/CSV/LG/bc_infill/bc_infill_run1.csv")
 
     # data needs to preprocessed for RBF algorithm
     # For RBF apply labels to locations
@@ -71,7 +71,7 @@ def main():
     fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1)
 
-    im = plt.imread("data/bcinfill_map.jpg")
+    im = plt.imread("CSUDB/Maps/bc_infill.PNG")
     implot = plt.imshow(im, origin='upper', extent=[-15, 860, 250, 630])
 
     # data collection lists
@@ -124,9 +124,9 @@ def main():
 
 if __name__ == "__main__":
 
-    print(get_map(PLACES[0]))
-    print(get_paths(PLACES[0], DEVICES[0], 0))
-    exit()
+    # print(get_map(PLACES[0]))
+    # print(get_paths(PLACES[0], DEVICES[0], 0))
+    # exit()
     global K
     # print("RBF ", TRAIN_DEVICE + " + " + TEST_DEVICE)
     # print("{:3} {:5}".format("K", "AVG. ERROR"))
