@@ -8,6 +8,7 @@ from CSUDB.data_fetcher import Device, Place, get_paths, read_meta, read_csv
 from label_block_size import LABEL_BLOCK_SIZE
 from collections import defaultdict
 from plotter import grouped_places_boxplot_devices
+from threading import Thread
 
 # ######### Constants ##########
 
@@ -225,21 +226,32 @@ def do_RBF(place, train_dev, train_run, test_dev, test_run,
 
     return actual_pos, found_pos
 
-
-def do_RBF_all():
+# global var
+errors = defaultdict(lambda: defaultdict(dict))
+def do_RBF_all(place_list):
     """
     run RBF on all devices,
     :returns: dict{place}{dev_train}{dev_test} => list
     """
-    errors = defaultdict(lambda: defaultdict(dict))
+    global errors
+    # errors = defaultdict(lambda: defaultdict(dict))
+
+    if not place_list:
+        print("place list not given!")
+        place_list = Place.list_all[1:]
+    else:
+        print(place_list)
+
 
     # ignore lg and bc_infill
-    for p in Place.list_all[1:3]:
-        for dev_train in Device.list_all[1:3]:
-            for dev_test in Device.list_all[1:3]:
+    for p in place_list:
+        for dev_train in Device.list_all[1:]:
+            for dev_test in Device.list_all[1:]:
 
                 if dev_train is dev_test:
                     continue
+
+                print("\n\n", p, dev_train, dev_test)
 
                 real, guess = do_RBF(p, dev_train, 0, dev_test, 0,
                                      label_block_size=LABEL_BLOCK_SIZE[p])
@@ -249,12 +261,30 @@ def do_RBF_all():
 
                 errors[p][dev_train][dev_test] = error_in_m
 
-                return errors
+    return errors
 
 
 if __name__ == "__main__":
 
-    e = do_RBF_all()
-    grouped_places_boxplot_devices(e)
+    global errors
+    # do_RBF_all()
+    # num_threads = 2
+    
+    t = Thread(target=do_RBF_all, args=[[Place.list_all[1]]] )
+    t.start()
+
+    t1 = Thread(target=do_RBF_all, args=[[Place.list_all[2]]] )
+    t1.start()
+
+    t3 = Thread(target=do_RBF_all, args=[[Place.list_all[3]]] )
+    t3.start()
+
+    t.join()
+    t1.join()
+    t3.join()
+
+    grouped_places_boxplot_devices(errors)
+
+
     # print("\n\n")
     # print(errors)
