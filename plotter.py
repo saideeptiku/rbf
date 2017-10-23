@@ -52,7 +52,7 @@ def grouped_places_boxplot_devices(data_dict):
         sp += .60
 
     plt.xlim(0.5, 8)
-    plt.xticks([1.6, 4, 6.6], ['clark_a', 'library', 'mechanical'])
+    plt.xticks([1.6, 4, 6.6], place_groups)
 
     patches = []
     for i, dev in enumerate(test_devices):

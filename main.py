@@ -245,16 +245,18 @@ def do_RBF_all(place_list=None):
         for dev_train in Device.list_all[1:]:
             for dev_test in Device.list_all[1:]:
 
-                if dev_train is dev_test:
+                if dev_train == dev_test:
                     continue
 
-                print("\n\n", p, dev_train, dev_test)
+                print("\n", p, dev_train, dev_test)
 
                 real, guess = do_RBF(p, dev_train, 0, dev_test, 0,
                                      label_block_size=LABEL_BLOCK_SIZE[p])
 
                 # convert each distance in meters
                 error_in_m = [e / px_to_m[p] for e in util_f.euclideans(real, guess)]
+
+                print("\n\n", p, dev_train, dev_test, "==>", sum(error_in_m) / len(error_in_m))
 
                 errors[p][dev_train][dev_test] = error_in_m
 
@@ -266,19 +268,11 @@ def write_to_file(filename, ddd_dict):
     for i in range(100):
         cols += ', err'+str(i)
 
-    place_groups = list(ddd_dict.keys())
-
-    train_devices = list(ddd_dict[place_groups[0]].keys())
-
-    test_devices = list(ddd_dict[place_groups[0]][train_devices[0]].keys())
-
-    print(place_groups, train_devices, test_devices)
-
     f = open(filename, 'w')
     f.write(cols + "\n")
-    for p in place_groups:
-        for d1 in train_devices:
-            for d2 in test_devices:
+    for p in Place.list_all[1:]:
+        for d1 in Device.list_all[1:]:
+            for d2 in Device.list_all[1:]:
 
                 if d1 == d2:
                     continue
@@ -327,14 +321,17 @@ if __name__ == "__main__":
     # t.join()
     # t1.join()
     # t3.join()
-
-    errors = do_RBF_all()
-
-    write_to_file('results.csv', errors)
+    #
+    # er = do_RBF_all()
+    #
+    # write_to_file('results.csv', er)
 
 
     # write_to_file('results.csv', errors)
-    # errors = read_from_file('results.csv')
+    errors = read_from_file('results.csv')
+
+
+
     #
     # place_groups = list(errors.keys())
     # # print(place_groups)
@@ -343,7 +340,7 @@ if __name__ == "__main__":
     # #
     # test_devices = list(errors[place_groups[0]][train_devices[0]].keys())
     # print(place_groups, train_devices, test_devices)
-    # grouped_places_boxplot_devices()
+    grouped_places_boxplot_devices(errors)
 
 
     # print("\n\n")
