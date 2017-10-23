@@ -51,7 +51,7 @@ def grouped_places_boxplot_devices(data_dict):
                     )
         sp +=0.50
 
-    # plt.xlim(0.5, 4)
+    plt.xlim(0.5, 7)
     plt.xticks([1.5, 2.5, 3.5], place_groups)
 
     patches = []
