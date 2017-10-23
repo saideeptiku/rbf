@@ -63,5 +63,6 @@ def grouped_places_boxplot_devices(data_dict):
 
     plt.title("RBF: Train: "+str(train_devices[0]))
 
+    plt.savefig("test.PNG")
     plt.show()
 
