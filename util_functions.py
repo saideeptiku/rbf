@@ -87,11 +87,17 @@ def spearman_footrule_distance(coordinate_a, coordinate_b):
     return dist
 
 
-def average_euclidean(list_tuples1, list_tuples2):
+def euclideans(list_tuples1, list_tuples2):
     dist = []
 
     for (u1, v1), (u2, v2) in zip(list_tuples1, list_tuples2):
         dist.append(euclidean((u1, v1), (u2, v2,)))
+
+    return dist
+
+
+def average_euclidean(list_tuples1, list_tuples2):
+    dist = euclideans(list_tuples1, list_tuples2)
 
     return sum(dist) / len(dist)
 
@@ -143,7 +149,19 @@ def pick_label_num_by_multiple(df, mul, pos_label_col):
     picks = []
 
     for i in range(1, int(max(df[pos_label_col].tolist()))):
-        if i%mul == 0:
+        if i % mul == 0:
             picks.append(i)
 
     return df[df[pos_label_col].isin(picks)]
+
+
+def avg_error_factored(actual_pos, found_pos, conversion_factor=20):
+    """
+    get avg. error in meters
+    """
+
+    avg_err = convert_unit(average_euclidean(actual_pos,
+                                             found_pos),
+                           conversion_factor)
+
+    return avg_err

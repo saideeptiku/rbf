@@ -132,10 +132,11 @@ def get_euclidean(x1, y1, x2, y2):
     return math.hypot(x2 - x1, y2 - y1)
 
 
-def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col):
+def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col,
+                          verbose=False, get_count=False):
     """
     add labels to df positions
-    
+
     :param y_col: 
     :param x_col: 
     :param new_pos_col: 
@@ -143,6 +144,9 @@ def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col):
     :param df: 
     :return: 
     """
+
+    unlabeled_count = 0
+
     # add new column to df
     df[new_pos_col] = np.nan
 
@@ -156,16 +160,22 @@ def add_position_label_df(label_manager, df, x_col, y_col, new_pos_col):
 
         label = label_manager.get_label(x, y)
 
-        if label is None:
-            print("-" * 100)
-            print("There seems to be a data point that was not labeled")
-            print(df.name, "df at index:", index)
-            print("consider increasing average variation")
-            print("-" * 100)
+        if label is None and get_count:
+            unlabeled_count += 1
+            if verbose:
+                print("-" * 100)
+                print("There seems to be a data point that was not labeled")
+                print(df.name, "df at index:", index)
+                print("consider increasing average variation")
+                print("-" * 100)
+            
             continue
 
         # unfortunately, iterrows() gives a copy of df and not df itself
         df.loc[index, new_pos_col] = label
+
+    if get_count:
+        return df, unlabeled_count
 
     return df
 
@@ -209,13 +219,14 @@ def label_similar_locations(train_df, test_df,
                             label_block_size=5,
                             new_pos_col="position_label",
                             average_duplicate_labels_train=True,
-                            average_duplicate_labels_test=True,):
+                            average_duplicate_labels_test=True, 
+                            verbose=False, get_count=False):
     """
     label each x-y location as a position from 1 to N.
     This will convert data collected at each point into \
     data collected from a region or sample space.    
     You will get only samples spaces that are an intersection of training and testing
-    
+
     :param average_duplicate_labels_test:
     :param average_duplicate_labels_train:
     :param label_block_size: minimum distance between two sample spaces
@@ -229,9 +240,12 @@ def label_similar_locations(train_df, test_df,
     :param new_pos_col: column name for the new position label column
     :return: 
     """
-    print("*" * 100)
-    print("*", " " * 31, "label similar locations: report ", " " * 31, "*")
-    print("*" * 100)
+    fail_label_count = 0
+
+    if verbose:
+        print("*" * 100)
+        print("*", " " * 31, "label similar locations: report ", " " * 31, "*")
+        print("*" * 100)
 
     # read data training
     train_df.name = "Training"
@@ -240,11 +254,19 @@ def label_similar_locations(train_df, test_df,
     test_df.name = "Testing"
 
     # create labels
-    lab_man = create_xy_labels(train_df, test_df, label_block_size, x_col, y_col)
+    lab_man = create_xy_labels(
+        train_df, test_df, label_block_size, x_col, y_col)
 
     # label the df
-    train_df_lbld = add_position_label_df(lab_man, train_df, x_col, y_col, new_pos_col)
-    test_df_lbld = add_position_label_df(lab_man, test_df, x_col, y_col, new_pos_col)
+    train_df_lbld, a = add_position_label_df(lab_man, train_df,
+                                          x_col, y_col, 
+                                          new_pos_col, get_count=True, verbose=verbose)
+
+    test_df_lbld, b = add_position_label_df(lab_man, test_df,
+                                         x_col, y_col, 
+                                         new_pos_col, get_count=True, verbose=verbose)
+
+    fail_label_count = a + b
 
     # remove unlabeled rows
     train_df_lbld = train_df_lbld[pd.notnull(train_df_lbld[new_pos_col])]
@@ -256,16 +278,21 @@ def label_similar_locations(train_df, test_df,
                                      set(test_df_lbld[new_pos_col]))
 
     # keep rows that have position label in common_label
-    train_df_lbld = train_df_lbld[train_df_lbld[new_pos_col].isin(common_labels)]
+    train_df_lbld = train_df_lbld[train_df_lbld[new_pos_col].isin(
+        common_labels)]
     test_df_lbld = test_df_lbld[test_df_lbld[new_pos_col].isin(common_labels)]
 
-    print("*" * 100)
+    if verbose:
+        print("*" * 100)
 
     if average_duplicate_labels_test:
         test_df_lbld = average_duplicate_labels(test_df_lbld, new_pos_col)
 
     if average_duplicate_labels_train:
         train_df_lbld = average_duplicate_labels(train_df_lbld, new_pos_col)
+
+    if get_count:
+        return train_df_lbld, test_df_lbld, fail_label_count    
 
     return train_df_lbld, test_df_lbld
 
