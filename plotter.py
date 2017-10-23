@@ -42,17 +42,17 @@ def grouped_places_boxplot_devices(data_dict):
     data = [A, B, C]
     sp = 0
     for i, d in enumerate(data):
-        plt.boxplot(d, positions=[1+sp, 2+sp, 3+sp], notch=True, patch_artist=True,
+        plt.boxplot(d, positions=[1+sp, 3.5+sp, 6+sp], notch=True, patch_artist=True,
                     boxprops=dict(facecolor=c[i], color=c[i]),
                     capprops=dict(color=c[i]),
                     whiskerprops=dict(color=c[i]),
                     flierprops=dict(color=c[i], markeredgecolor=c[i]),
                     medianprops=dict(color=c[i]),
                     )
-        sp +=0.50
+        sp += .60
 
-    plt.xlim(0.5, 7)
-    plt.xticks([1.5, 2.5, 3.5], place_groups)
+    plt.xlim(0.5, 8)
+    plt.xticks([1.6, 4, 6.6], ['clark_a', 'library', 'mechanical'])
 
     patches = []
     for i, dev in enumerate(test_devices):
@@ -60,6 +60,8 @@ def grouped_places_boxplot_devices(data_dict):
         patches.append(patch)
 
     plt.legend(handles=patches)
+
+    plt.ylabel("error(m)")
 
     plt.title("RBF: Train: "+str(train_devices[0]))
 

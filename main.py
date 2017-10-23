@@ -9,6 +9,7 @@ from label_block_size import LABEL_BLOCK_SIZE
 from collections import defaultdict
 from plotter import grouped_places_boxplot_devices
 from threading import Thread
+import csv
 
 # ######### Constants ##########
 
@@ -186,8 +187,7 @@ def do_RBF(place, train_dev, train_run, test_dev, test_run,
     test_df = util_f.set_df_index_begin(test_df)
 
     # make input feature columns list
-    input_cols = list(set(train_df.columns) -
-                      set(['x', 'y', 'position_label']))
+    input_cols = list(set(train_df.columns) - set(['x', 'y', 'position_label']))
     # make output feature column list
     pos_label = 'position_label'
 
@@ -226,22 +226,19 @@ def do_RBF(place, train_dev, train_run, test_dev, test_run,
 
     return actual_pos, found_pos
 
-# global var
-errors = defaultdict(lambda: defaultdict(dict))
-def do_RBF_all(place_list):
+
+def do_RBF_all(place_list=None):
     """
     run RBF on all devices,
     :returns: dict{place}{dev_train}{dev_test} => list
     """
-    global errors
-    # errors = defaultdict(lambda: defaultdict(dict))
+    errors = defaultdict(lambda: defaultdict(dict))
 
     if not place_list:
         print("place list not given!")
         place_list = Place.list_all[1:]
     else:
         print(place_list)
-
 
     # ignore lg and bc_infill
     for p in place_list:
@@ -264,26 +261,89 @@ def do_RBF_all(place_list):
     return errors
 
 
+def write_to_file(filename, ddd_dict):
+    cols = 'place, device_train, device_test'
+    for i in range(100):
+        cols += ', err'+str(i)
+
+    place_groups = list(ddd_dict.keys())
+
+    train_devices = list(ddd_dict[place_groups[0]].keys())
+
+    test_devices = list(ddd_dict[place_groups[0]][train_devices[0]].keys())
+
+    print(place_groups, train_devices, test_devices)
+
+    f = open(filename, 'w')
+    f.write(cols + "\n")
+    for p in place_groups:
+        for d1 in train_devices:
+            for d2 in test_devices:
+
+                if d1 == d2:
+                    continue
+
+                f.write(p + ", " + d1 + ", " + d2 + ", ")
+                str_dat = [str(x) for x in ddd_dict[p][d1][d2]]
+                f.write(", ".join(str_dat) + "\n")
+    f.close()
+
+
+def read_from_file(filename):
+    errors = defaultdict(lambda: defaultdict(dict))
+
+    lines = []
+    with open(filename) as f:
+        lines = f.readlines()
+
+    for line in lines[1:]:
+
+        line_list = line.replace(" ", "").strip("\n").split(",")
+        p = line_list[0]
+        d1 = line_list[1]
+        d2 = line_list[2]
+        "".strip()
+        data = [float(x) for x in line_list[3:]]
+
+        errors[p][d1][d2] = data
+
+    return errors
+
 if __name__ == "__main__":
 
-    global errors
+    # global errors
     # do_RBF_all()
     # num_threads = 2
-    
-    t = Thread(target=do_RBF_all, args=[[Place.list_all[1]]] )
-    t.start()
 
-    t1 = Thread(target=do_RBF_all, args=[[Place.list_all[2]]] )
-    t1.start()
+    # t = Thread(target=do_RBF_all, args=[[Place.list_all[1]]] )
+    # t.start()
+    #
+    # t1 = Thread(target=do_RBF_all, args=[[Place.list_all[2]]] )
+    # t1.start()
+    #
+    # t3 = Thread(target=do_RBF_all, args=[[Place.list_all[3]]] )
+    # t3.start()
+    #
+    # t.join()
+    # t1.join()
+    # t3.join()
 
-    t3 = Thread(target=do_RBF_all, args=[[Place.list_all[3]]] )
-    t3.start()
+    errors = do_RBF_all()
 
-    t.join()
-    t1.join()
-    t3.join()
+    write_to_file('results.csv', errors)
 
-    grouped_places_boxplot_devices(errors)
+
+    # write_to_file('results.csv', errors)
+    # errors = read_from_file('results.csv')
+    #
+    # place_groups = list(errors.keys())
+    # # print(place_groups)
+    #
+    # train_devices = list(errors[place_groups[0]].keys())
+    # #
+    # test_devices = list(errors[place_groups[0]][train_devices[0]].keys())
+    # print(place_groups, train_devices, test_devices)
+    # grouped_places_boxplot_devices()
 
 
     # print("\n\n")
