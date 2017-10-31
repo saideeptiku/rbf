@@ -13,10 +13,12 @@ import csv
 
 # ######### Constants ##########
 
+
 px_to_m = {
     'bc_infill': 20,
     'clark_A': 18,
     'lib': 20,
+    'lib_2m': 20,
     'mech_f1': 17
 }
 
@@ -141,19 +143,26 @@ def plot_map():
 
 
 def do_RBF(place, train_dev, train_run, test_dev, test_run,
-           samples_per_rp=5, label_block_size=5, k=3):
+           samples_per_rp=1, label_block_size=5, k=3):
     """
     Run RBF
     """
     # read data training
     train_paths = get_paths(place, train_dev, train_run, meta=True)
+    test_paths = get_paths(place, test_dev, test_run, meta=True)    
+
+    if  not test_paths or not train_paths:
+        print("no data for", place, train_dev)
+        return [], []
+
     train_meta_dict = read_meta(train_paths[1])
+
 
     training_df = read_csv(train_paths[0], ["WAP*"], ['x', 'y'], replace_na=-100,
                            force_samples_per_rp=samples_per_rp, rename_cols=train_meta_dict)
 
     # read data testing
-    test_paths = get_paths(place, test_dev, test_run, meta=True)
+
     test_meta_dict = read_meta(test_paths[1])
 
     validation_df = read_csv(test_paths[0], ["WAP*"], ['x', 'y'], replace_na=-100,
@@ -227,7 +236,7 @@ def do_RBF(place, train_dev, train_run, test_dev, test_run,
     return actual_pos, found_pos
 
 
-def do_RBF_all(place_list=None):
+def do_RBF_all(place_list=None, compare_self=True):
     """
     run RBF on all devices,
     :returns: dict{place}{dev_train}{dev_test} => list
@@ -236,27 +245,27 @@ def do_RBF_all(place_list=None):
 
     if not place_list:
         print("place list not given!")
-        place_list = Place.list_all[1:]
+        place_list = Place.list_all
     else:
         print(place_list)
 
-    # ignore lg and bc_infill
     for p in place_list:
-        for dev_train in Device.list_all[1:]:
-            for dev_test in Device.list_all[1:]:
+        for dev_train in Device.list_all:
+            for dev_test in Device.list_all:
 
-                if dev_train == dev_test:
+                if dev_train == dev_test and not compare_self:
                     continue
 
                 print("\n", p, dev_train, dev_test)
 
-                real, guess = do_RBF(p, dev_train, 0, dev_test, 0,
+                real, guess = do_RBF(p, dev_train, 0, dev_test, 1,
                                      label_block_size=LABEL_BLOCK_SIZE[p])
 
                 # convert each distance in meters
                 error_in_m = [e / px_to_m[p] for e in util_f.euclideans(real, guess)]
 
-                print("\n\n", p, dev_train, dev_test, "==>", sum(error_in_m) / len(error_in_m))
+                if error_in_m:
+                    print("\n\n", p, dev_train, dev_test, "==>", sum(error_in_m) / len(error_in_m))
 
                 errors[p][dev_train][dev_test] = error_in_m
 
@@ -266,19 +275,24 @@ def do_RBF_all(place_list=None):
 def write_to_file(filename, ddd_dict):
     cols = 'place, device_train, device_test'
     for i in range(100):
-        cols += ', err'+str(i)
+        cols += ', err' + str(i)
 
     f = open(filename, 'w')
     f.write(cols + "\n")
-    for p in Place.list_all[1:]:
-        for d1 in Device.list_all[1:]:
-            for d2 in Device.list_all[1:]:
+    for p in Place.list_all:
+        for d1 in Device.list_all:
+            for d2 in Device.list_all:
 
-                if d1 == d2:
-                    continue
+                # if d1 == d2:
+                #     continue
 
                 f.write(p + ", " + d1 + ", " + d2 + ", ")
-                str_dat = [str(x) for x in ddd_dict[p][d1][d2]]
+                try:
+                    str_dat = [str(x) for x in ddd_dict[p][d1][d2]]
+                except:
+                    print(p, d1, d2)
+                    str_dat = []
+
                 f.write(", ".join(str_dat) + "\n")
     f.close()
 
@@ -296,8 +310,14 @@ def read_from_file(filename):
         p = line_list[0]
         d1 = line_list[1]
         d2 = line_list[2]
-        "".strip()
-        data = [float(x) for x in line_list[3:]]
+
+        data_list = list(line_list[3:])
+
+        if data_list:
+            data = [float(x) for x in data_list[3:]]
+        else:
+            data = []
+            print()
 
         errors[p][d1][d2] = data
 
@@ -321,27 +341,33 @@ if __name__ == "__main__":
     # t.join()
     # t1.join()
     # t3.join()
-    #
-    # er = do_RBF_all()
-    #
-    # write_to_file('results.csv', er)
+    # do_RBF(Place.mech_f1, Device.oneplus3, 0, Device.samsung_s6, 1)
+    # er = do_RBF_all(place_list=[Place.bc_infill, Place.mech_f1, Place.clark_a])
+    
+    # write_to_file('results/results.csv', er)
 
 
-    # write_to_file('results.csv', errors)
-    errors = read_from_file('results.csv')
+    # # write_to_file('results.csv', errors)
+    # errors = read_from_file('results.csv')
 
 
 
-    #
-    # place_groups = list(errors.keys())
-    # # print(place_groups)
-    #
-    # train_devices = list(errors[place_groups[0]].keys())
     # #
-    # test_devices = list(errors[place_groups[0]][train_devices[0]].keys())
-    # print(place_groups, train_devices, test_devices)
-    grouped_places_boxplot_devices(errors)
+    # # place_groups = list(errors.keys())
+    # # # print(place_groups)
+    # #
+    # # train_devices = list(errors[place_groups[0]].keys())
+    # # #
+    # # test_devices = list(errors[place_groups[0]][train_devices[0]].keys())
+    # # print(place_groups, train_devices, test_devices)
+    # grouped_places_boxplot_devices(errors)
 
-
+    # for dev in Device.list_all[1:]:
+    #     grouped_places_boxplot_devices(read_from_file('results/results.csv'), train_device=dev)
     # print("\n\n")
     # print(errors)
+    grouped_places_boxplot_devices(read_from_file('results/results.csv'),
+                                   train_device=Device.oneplus2,
+                                   test_devices=[Device.samsung_s6, Device.lg, Device.oneplus2],
+                                   places=[Place.bc_infill, Place.clark_a, Place.mech_f1])
+

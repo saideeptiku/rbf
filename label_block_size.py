@@ -17,6 +17,7 @@ LABEL_BLOCK_SIZE = {
     'bc_infill': 5,
     'clark_A': 6,
     'lib': 15,
+    'lib_2m': 15,
     'mech_f1': 12
 }
 
